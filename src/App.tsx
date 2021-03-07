@@ -1,58 +1,71 @@
-import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import './App.css';
+import React, { FC, useEffect } from "react";
+import "./App.css";
+import WebCamCapture from "./WebCamCapture";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import PreView from "./PreView";
+import "./PreView.css";
+import Chats from "./Chats";
+import ChatView from "./ChatView";
+import Login from "./Login";
+import { useDispatch, useSelector } from "react-redux";
+import { login, logout, selectUser } from "./features/appSlice";
+import { auth } from "./firebase";
 
-function App() {
+const App: FC = () => {
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    auth.onAuthStateChanged((authUser) => {
+      if (authUser)
+        dispatch(
+          login({
+            userName: authUser.displayName,
+            profilePic: authUser.photoURL,
+            id: authUser.uid,
+          })
+        );
+      else dispatch(logout());
+    });
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
+    <div className="app">
+      <Router>
+        {!user ? (
+          <Login />
+        ) : (
+          <>
+            <img
+              className="app-logo"
+              src="https://pbs.twimg.com/profile_images/1324384358418042880/A-ENfuMC_400x400.jpg"
+              alt="snapchat logo"
+            />
+
+            <div className="app-body">
+              <div className="app-body-background">
+                <Switch>
+                  <Route exact path="/">
+                    <WebCamCapture />
+                  </Route>
+                  <Route exact path="/preview">
+                    <PreView />
+					
+                  </Route>
+                  <Route exact path="/chats">
+                    <Chats />
+                  </Route>
+                  <Route exact path="/chat/view">
+                    <ChatView />
+                  </Route>
+                </Switch>
+              </div>
+            </div>
+          </>
+        )}
+      </Router>
     </div>
   );
-}
+};
 
 export default App;
